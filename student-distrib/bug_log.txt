@@ -1,0 +1,92 @@
+1. Bug 1
+    Problem:            Loop booting when GDT is finished
+    Fix:                We had to comment out the launch test to stop it from booting indefinitely. 
+                        We used gdb to step through the program and find out there is a infinite loop in the launch test.
+
+2. Bug 2                
+    Problem:            Keyboard keep printing 249 instead of the ASCII            
+    Fix:                We find out we were accessing the wrong port, we are getting the staus instead of the data values.
+
+3. Bug 3
+    Problem:            RTC only flash once
+    Fix:                We find out our send_eoi function is wrong, 
+                        when we handle a slave PIC we didn't - 8 for the interrupt number, 
+                        which means we were accessing a non-existent irq on the slave PIC
+
+4. Bug 4
+    Problem:            Paging assembly files causing bootloop
+    Fix:                We accidentally used movl 8(%esp) instead of 8(%ebp),
+                        which was breaking everything and causing bootloop. Spent too long finding this,
+                        but after fixing this we got out of bootloop and could actually make some progress on paging.
+
+5. Bug 5
+    Problem:            Paging would break when using printf
+    Fix:                We found that in the current implementation, when we use printf, libc
+                        references 0xB8000, which is video memory. I was loading the page table
+                        at idx 0, which wasn't mapping to 0xB8000 correctly. I needed to move the entry
+                        to be idx 0xB8, so then it would map correctly to 0xB8000, and then we could print stuff without
+                        page faulting. Aadi the CA explained this to me.
+
+6. Bug 6
+    Problem:            the characters after 80 would write over each other
+    Fix:                We found that since the width of the screen is 80, and since the keyboard buffer is 128
+                        we would need to check if there were 80 characters in the screen and print out a new line
+                        to make sure we can see all the characters.
+
+7. Bug 7
+    Problem:            we were getting a page fault when we were dereferencing in the filesystem
+    Fix:                our structs were not of correct size (not 4kb). The padding was slightly off,
+                        and the number of data blocks in our inode was wayyyy off. fixing that fixed our dereferencing issues.
+
+8. Bug 8
+    Problem:            when we were going over 80 characters, and then deleting to the previous line, we were losing
+                        a character when we would hit enter
+    Fix:                we added a flag for specifically when that case would happen added a section of code for when
+                        that happened.
+
+9. Bug 9
+    Problem:            When we try to context switch, it jumps to a random spot it shouldn't be
+    Fix:                we fogot to set esp0 and ss0 for the tss, so once we set esp0 to the PID stack and ss0 for the KERNEL_DS it worked
+
+10. Bug 10
+    Problem:            The second time we go into execute, the context switch iret to the call main in systemcall.asm, which is right, 
+                        but then it jumps straight to halt without entering main
+    Fix:                Inside our execute, we find out that flushing the tlb will clear the dentry struct we created, 
+                        so we moved the file open before flushing the tlb and it worked 
+
+11. Bug 11
+    Problem:            WHen we come back to execute and return, we return to a weird place it shouldn't be. 
+                        And the gdb can't read any instruction.
+    Fix:                We find out the memory location we jump to is the argument, so we know the stack is off by 1, we found the
+                        command which pop one extra off the stack and deleted it.
+
+12. Bug 12
+    Problem:            The program only works the first time not the second. Second time it page fault.
+    Fix:                We find out that we used a macro and did PID_STACK(currend_pid - 1), 
+                        this will mean to minus 1 to the end result instead of the argument
+
+13. Bug 13
+    Problem:            We could exit base shell once but a second time would cause a page fault.
+    Fix:                We were not decrementing the current_pid variable because we were exiting halt early,
+                        so base shell would be at pid = 1. We added a variable that kept track of this.
+
+14. Bug 14
+    Problem:            We were getting a page fault when we added the page for video memory.
+    Fix:                Despite the PD table being user priviledge, the PT table was still in supervisor mode,
+                        so we had to change that and then it worked.          
+
+15. Bug 15
+    Problem:            Keyboard is writing to all three terminal instead of the correct one
+    Fix:                We found out that putc writes to B8, but B8 is constanly changing,
+                        so we created another putc for keyboard and made it always write to physical B8 
+
+16. Bug 16
+    Problem:            Pingpong is printing to all three screens
+    Fix:                In terminal write I was using terminal shown instead of current terminal, but this defeats the purpose of scheduling
+                        I changed it to current terminal and it worked
+
+17. Bug 17
+    Problem:            Scheduling keep page fault or boot loop
+    Fix:                This is because I was saving the context before I even execute shell, which is wrong
+
+

@@ -1,0 +1,27 @@
+boot.o: boot.S multiboot.h x86_desc.h types.h
+idt_helper.o: idt_helper.S
+paging_asm.o: paging_asm.S
+system_call_asm.o: system_call_asm.S
+x86_desc.o: x86_desc.S x86_desc.h types.h
+filesys.o: filesys.c filesys.h types.h lib.h system_call.h
+i8259.o: i8259.c i8259.h types.h lib.h
+idt.o: idt.c idt.h x86_desc.h types.h lebron.h lib.h idt_helper.h \
+  keyboard.h rtc.h system_call.h filesys.h terminal.h
+kernel.o: kernel.c multiboot.h types.h x86_desc.h lib.h i8259.h debug.h \
+  tests.h idt.h lebron.h rtc.h keyboard.h paging.h system_call.h \
+  filesys.h PIT.h
+keyboard.o: keyboard.c keyboard.h types.h system_call.h lib.h filesys.h \
+  i8259.h terminal.h
+lebron.o: lebron.c lebron.h lib.h types.h
+lib.o: lib.c lib.h types.h system_call.h filesys.h
+paging.o: paging.c paging.h lib.h types.h x86_desc.h paging_asm.h \
+  system_call.h filesys.h
+PIT.o: PIT.c system_call.h types.h lib.h filesys.h i8259.h x86_desc.h \
+  paging.h system_call_asm.h
+rtc.o: rtc.c rtc.h types.h lib.h i8259.h system_call.h filesys.h
+system_call.o: system_call.c system_call.h types.h lib.h filesys.h rtc.h \
+  terminal.h system_call_asm.h paging.h x86_desc.h
+terminal.o: terminal.c keyboard.h types.h lib.h i8259.h system_call.h \
+  filesys.h paging.h system_call_asm.h
+tests.o: tests.c tests.h x86_desc.h types.h filesys.h lib.h rtc.h \
+  keyboard.h terminal.h
